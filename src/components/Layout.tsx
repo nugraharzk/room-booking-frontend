@@ -47,25 +47,31 @@ export default function Layout() {
             </Link>
           )}
 
-          {user?.role === "Admin" && (
+          {(user?.role === "Admin" || user?.role === "Manager") && (
             <>
               <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Admin
+                Management
               </div>
-              <Link
-                to="/admin/users"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-              >
-                <Boxes className="h-4 w-4" />
-                Users
-              </Link>
-              <Link
-                to="/admin/rooms"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-              >
-                <CalendarDays className="h-4 w-4" />
-                Manage Rooms
-              </Link>
+
+              {user.role === "Admin" && (
+                <>
+                  <Link
+                    to="/admin/users"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                  >
+                    <Boxes className="h-4 w-4" />
+                    Users
+                  </Link>
+                  <Link
+                    to="/admin/rooms"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    Manage Rooms
+                  </Link>
+                </>
+              )}
+
               <Link
                 to="/admin/bookings"
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
@@ -79,7 +85,10 @@ export default function Layout() {
 
         <div className="pt-4 mt-auto border-t border-slate-800">
           <div className="px-4 py-2 mb-2 text-xs text-slate-400">
-            Logged in as: <span className="text-slate-200 font-medium block">{user?.name}</span>
+            Logged in as:{" "}
+            <span className="text-slate-200 font-medium block">
+              {user?.name}
+            </span>
           </div>
           <Button
             variant="ghost"

@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import LoginPage from "@/pages/LoginPage";
 import Dashboard from "@/pages/Dashboard";
@@ -9,7 +15,13 @@ import AdminUsersPage from "@/pages/admin/UsersPage";
 import AdminRoomsPage from "@/pages/admin/RoomsPage";
 import AdminBookingsPage from "@/pages/admin/BookingsPage";
 
-function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: string }) {
+function ProtectedRoute({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}) {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
 
@@ -17,7 +29,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
     // Redirect to dashboard if authorized but wrong role
     return <Navigate to="/" replace />;
   }
@@ -32,33 +44,52 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Dashboard />} />
             <Route path="rooms" element={<RoomsPage />} />
 
             {/* User Routes */}
-            <Route path="my-bookings" element={
-              <ProtectedRoute requiredRole="User">
-                <MyBookingsPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="my-bookings"
+              element={
+                <ProtectedRoute allowedRoles={["User", "Manager", "Admin"]}>
+                  <MyBookingsPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Admin Routes */}
-            <Route path="admin/users" element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminUsersPage />
-              </ProtectedRoute>
-            } />
-            <Route path="admin/rooms" element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminRoomsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="admin/bookings" element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminBookingsPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="admin/users"
+              element={
+                <ProtectedRoute allowedRoles={["Admin"]}>
+                  <AdminUsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/rooms"
+              element={
+                <ProtectedRoute allowedRoles={["Admin"]}>
+                  <AdminRoomsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/bookings"
+              element={
+                <ProtectedRoute allowedRoles={["Admin", "Manager"]}>
+                  <AdminBookingsPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
       </AuthProvider>

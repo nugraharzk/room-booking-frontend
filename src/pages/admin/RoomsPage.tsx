@@ -11,7 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
@@ -34,7 +40,7 @@ export default function AdminRoomsPage() {
 
   const fetchRooms = async () => {
     try {
-      const res = await api.get<Room[]>("/rooms/all");
+      const res = await api.get<Room[]>("/rooms");
       setRooms(res.data);
     } catch (err) {
       console.error("Failed to fetch rooms", err);
@@ -46,9 +52,29 @@ export default function AdminRoomsPage() {
   const toggleActive = async (room: Room) => {
     try {
       await api.patch(`/rooms/${room.id}/active`, { isActive: !room.isActive });
-      setRooms(rooms.map(r => r.id === room.id ? { ...r, isActive: !r.isActive } : r));
+      setRooms(
+        rooms.map((r) =>
+          r.id === room.id ? { ...r, isActive: !r.isActive } : r
+        )
+      );
     } catch (err) {
       console.error("Failed to toggle room active status", err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this room? This cannot be undone."
+      )
+    )
+      return;
+    try {
+      await api.delete(`/rooms/${id}`);
+      setRooms(rooms.filter((r) => r.id !== id));
+    } catch (err) {
+      console.error("Failed to delete room", err);
+      alert("Failed to delete room. It may have associated bookings.");
     }
   };
 
@@ -79,8 +105,12 @@ export default function AdminRoomsPage() {
   const handleUpdate = async () => {
     if (!editingRoom) return;
     try {
-      const res = await api.put<Room>(`/rooms/${editingRoom.id}`, { name, capacity, location });
-      setRooms(rooms.map(r => r.id === editingRoom.id ? res.data : r));
+      const res = await api.put<Room>(`/rooms/${editingRoom.id}`, {
+        name,
+        capacity,
+        location,
+      });
+      setRooms(rooms.map((r) => (r.id === editingRoom.id ? res.data : r)));
       setEditingRoom(null);
     } catch (err) {
       console.error("Failed to update room", err);
@@ -125,7 +155,11 @@ export default function AdminRoomsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(room)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEdit(room)}
+                    >
                       Edit
                     </Button>
                     <Button
@@ -134,6 +168,13 @@ export default function AdminRoomsPage() {
                       onClick={() => toggleActive(room)}
                     >
                       {room.isActive ? "Deactivate" : "Activate"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(room.id)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -152,15 +193,29 @@ export default function AdminRoomsPage() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="capacity">Capacity</Label>
-              <Input id="capacity" type="number" min="1" value={capacity} onChange={e => setCapacity(parseInt(e.target.value))} />
+              <Input
+                id="capacity"
+                type="number"
+                min="1"
+                value={capacity}
+                onChange={(e) => setCapacity(parseInt(e.target.value))}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="location">Location</Label>
-              <Input id="location" value={location} onChange={e => setLocation(e.target.value)} />
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -170,7 +225,10 @@ export default function AdminRoomsPage() {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingRoom} onOpenChange={(open) => !open && setEditingRoom(null)}>
+      <Dialog
+        open={!!editingRoom}
+        onOpenChange={(open) => !open && setEditingRoom(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Room</DialogTitle>
@@ -178,15 +236,29 @@ export default function AdminRoomsPage() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-name">Name</Label>
-              <Input id="edit-name" value={name} onChange={e => setName(e.target.value)} />
+              <Input
+                id="edit-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-capacity">Capacity</Label>
-              <Input id="edit-capacity" type="number" min="1" value={capacity} onChange={e => setCapacity(parseInt(e.target.value))} />
+              <Input
+                id="edit-capacity"
+                type="number"
+                min="1"
+                value={capacity}
+                onChange={(e) => setCapacity(parseInt(e.target.value))}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-location">Location</Label>
-              <Input id="edit-location" value={location} onChange={e => setLocation(e.target.value)} />
+              <Input
+                id="edit-location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>

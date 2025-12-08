@@ -2,7 +2,14 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  CardDescription,
+} from "@/components/ui/card";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "@/lib/api";
 
@@ -31,7 +38,9 @@ export default function LoginPage() {
       console.error(err);
       // Fallback for demo if API is missing (404) or fails
       if (err.response?.status === 404) {
-        setError("Login endpoint not found. Backend might be missing features.");
+        setError(
+          "Login endpoint not found. Backend might be missing features."
+        );
       } else {
         setError("Invalid credentials or server error.");
       }
@@ -52,7 +61,12 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email</label>
+              <label
+                htmlFor="email"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Email
+              </label>
               <Input
                 id="email"
                 type="email"
@@ -63,7 +77,12 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Password</label>
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Password
+              </label>
               <Input
                 id="password"
                 type="password"
@@ -80,7 +99,8 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <div className="text-xs text-center text-muted-foreground">
-            For demo purposes, ensure your backend is running on https://localhost:5201
+            For demo purposes, ensure your backend is running on
+            http://localhost:5200 or https://localhost:5201
           </div>
         </CardFooter>
       </Card>

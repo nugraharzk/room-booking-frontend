@@ -1,12 +1,28 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import type { Room } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Users, MapPin, CalendarPlus } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -17,8 +33,6 @@ export default function RoomsPage() {
   // Booking State
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
   const [subject, setSubject] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -29,7 +43,7 @@ export default function RoomsPage() {
 
   const fetchRooms = async () => {
     try {
-      const res = await api.get<Room[]>("/rooms");
+      const res = await api.get<Room[]>("/rooms/active");
       setRooms(res.data);
     } catch (err) {
       console.error(err);
@@ -40,27 +54,43 @@ export default function RoomsPage() {
   };
 
   const handleBook = async () => {
-    if (!selectedRoom || !date || !startTime || !endTime) return;
+    if (!selectedRoom || !date) return;
 
     setBookingLoading(true);
     try {
-      // Construct ISO strings
-      // Note: simplistic approach, assumes local time
-      const start = new Date(`${date}T${startTime}:00`).toISOString();
-      const end = new Date(`${date}T${endTime}:00`).toISOString();
-
       await api.post("/bookings", {
         roomId: selectedRoom.id,
-        start,
-        end,
+        // Backend now expects 'date' (yyyy-mm-dd) and infers full day.
+        date,
         subject,
       });
 
       setOpen(false);
-      alert("Booking created successfully!");
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Booking created successfully!",
+        timer: 1500,
+      });
     } catch (err: any) {
       console.error(err);
-      alert("Failed to create booking: " + (err.response?.data || err.message));
+      if (err.response?.status === 409) {
+        Swal.fire({
+          icon: "error",
+          title: "Booking Conflict",
+          text:
+            err.response.data.detail ||
+            "This room is already booked for the selected time.",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text:
+            "Failed to create booking: " +
+            (err.response?.data?.title || err.message),
+        });
+      }
     } finally {
       setBookingLoading(false);
     }
@@ -95,10 +125,13 @@ export default function RoomsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Dialog open={open && selectedRoom?.id === room.id} onOpenChange={(isOpen) => {
-                setOpen(isOpen);
-                if (isOpen) setSelectedRoom(room);
-              }}>
+              <Dialog
+                open={open && selectedRoom?.id === room.id}
+                onOpenChange={(isOpen) => {
+                  setOpen(isOpen);
+                  if (isOpen) setSelectedRoom(room);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button className="w-full">
                     <CalendarPlus className="mr-2 h-4 w-4" />
@@ -126,30 +159,6 @@ export default function RoomsPage() {
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="start" className="text-right">
-                        Start
-                      </Label>
-                      <Input
-                        id="start"
-                        type="time"
-                        className="col-span-3"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="end" className="text-right">
-                        End
-                      </Label>
-                      <Input
-                        id="end"
-                        type="time"
-                        className="col-span-3"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="subject" className="text-right">
                         Subject
                       </Label>
@@ -163,7 +172,11 @@ export default function RoomsPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="button" onClick={handleBook} disabled={bookingLoading}>
+                    <Button
+                      type="button"
+                      onClick={handleBook}
+                      disabled={bookingLoading}
+                    >
                       {bookingLoading ? "Booking..." : "Confirm Booking"}
                     </Button>
                   </DialogFooter>
