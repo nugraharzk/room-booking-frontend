@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3200:80"
+    extra_hosts:
+      - "roombooking-api:host-gateway"
+    restart: unless-stopped
