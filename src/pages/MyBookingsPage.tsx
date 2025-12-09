@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Booking } from "@/types";
 import { format } from "date-fns";
+import Swal from "sweetalert2";
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -34,21 +35,40 @@ export default function MyBookingsPage() {
   };
 
   const cancelBooking = async (id: string) => {
-    if (!confirm("Are you sure you want to cancel?")) return;
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to cancel this booking?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, cancel it!",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await api.post(`/bookings/${id}/cancel`);
-      setBookings(bookings.map(b => b.id === id ? { ...b, status: "Cancelled" } : b));
+      setBookings(
+        bookings.map((b) => (b.id === id ? { ...b, status: "Cancelled" } : b))
+      );
+      Swal.fire("Cancelled!", "Your booking has been cancelled.", "success");
     } catch (err) {
       console.error("Failed to cancel booking", err);
+      Swal.fire("Error!", "Failed to cancel booking.", "error");
     }
   };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "Confirmed": return "success";
-      case "Cancelled": return "destructive";
-      case "Completed": return "secondary";
-      default: return "default"; // Pending
+      case "Confirmed":
+        return "success";
+      case "Cancelled":
+        return "destructive";
+      case "Completed":
+        return "secondary";
+      default:
+        return "default"; // Pending
     }
   };
 
@@ -76,20 +96,31 @@ export default function MyBookingsPage() {
             <TableBody>
               {bookings.map((booking) => (
                 <TableRow key={booking.id}>
-                  <TableCell className="font-medium">{booking.subject || "No Subject"}</TableCell>
-                  <TableCell>{format(new Date(booking.start), "PPP p")}</TableCell>
-                  <TableCell>{format(new Date(booking.end), "PPP p")}</TableCell>
+                  <TableCell className="font-medium">
+                    {booking.subject || "No Subject"}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(booking.start), "PPP p")}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(booking.end), "PPP p")}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(booking.status)}>
                       {booking.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    {booking.status !== "Cancelled" && booking.status !== "Completed" && (
-                      <Button variant="destructive" size="sm" onClick={() => cancelBooking(booking.id)}>
-                        Cancel
-                      </Button>
-                    )}
+                    {booking.status !== "Cancelled" &&
+                      booking.status !== "Completed" && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => cancelBooking(booking.id)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
                   </TableCell>
                 </TableRow>
               ))}

@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Booking } from "@/types";
 import { format } from "date-fns";
+import Swal from "sweetalert2";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -34,16 +35,57 @@ export default function AdminBookingsPage() {
   };
 
   const handleApprove = async (id: string) => {
-    if (!confirm("Are you sure you want to approve this booking?")) return;
+    const result = await Swal.fire({
+      title: "Approve Booking?",
+      text: "Are you sure you want to approve this booking?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, approve it!",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await api.post(`/bookings/${id}/confirm`);
-      // Optimistic update or refetch
+      // Optimistic update
       setBookings(
         bookings.map((b) => (b.id === id ? { ...b, status: "Confirmed" } : b))
       );
+      Swal.fire({
+        title: "Approved!",
+        text: "Booking has been approved successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error("Failed to approve booking", err);
-      alert("Failed to approve booking");
+      Swal.fire("Error", "Failed to approve booking", "error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will permanently delete the booking.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await api.delete(`/bookings/${id}`);
+      setBookings(bookings.filter((b) => b.id !== id));
+      Swal.fire("Deleted!", "Booking has been deleted.", "success");
+    } catch (err) {
+      console.error("Failed to delete booking", err);
+      Swal.fire("Error!", "Failed to delete booking.", "error");
     }
   };
 
@@ -102,16 +144,25 @@ export default function AdminBookingsPage() {
                   <TableCell>
                     {format(new Date(booking.createdAt), "PPP")}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {booking.status === "Pending" && (
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      {booking.status === "Pending" && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => handleApprove(booking.id)}
+                        >
+                          Approve
+                        </Button>
+                      )}
                       <Button
                         size="sm"
-                        variant="default"
-                        onClick={() => handleApprove(booking.id)}
+                        variant="destructive"
+                        onClick={() => handleDelete(booking.id)}
                       >
-                        Approve
+                        Delete
                       </Button>
-                    )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

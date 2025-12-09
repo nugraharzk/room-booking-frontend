@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import Swal from "sweetalert2";
 import type { Room } from "@/types";
 
 export default function AdminRoomsPage() {
@@ -63,18 +64,34 @@ export default function AdminRoomsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this room? This cannot be undone."
-      )
-    )
-      return;
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await api.delete(`/rooms/${id}`);
       setRooms(rooms.filter((r) => r.id !== id));
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Room has been deleted successfully.",
+        timer: 1500,
+      });
     } catch (err) {
       console.error("Failed to delete room", err);
-      alert("Failed to delete room. It may have associated bookings.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to delete room. It may have associated bookings.",
+      });
     }
   };
 
