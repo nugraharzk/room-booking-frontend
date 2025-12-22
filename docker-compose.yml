@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_API_BASE_URL=/api
+        - VITE_API_BASE_URL=http://host.docker.internal:5200/api
         - VITE_APP_TITLE=Room Booking
     ports:
       - "3200:80"
